@@ -235,43 +235,7 @@
          f_siitdthick = 'mxxxx'
          f_siitdsnthick = 'mxxxx'
 
-         ! Turn off CICE duplicates
-         f_iage = 'xxxxx'
-         f_snoice = 'xxxxx'
-         f_strength = 'xxxxx'
-         f_divu = 'xxxxx'
-         f_flat = 'xxxxx'
-         f_flat_ai = 'xxxxx'
-         f_flwdn = 'xxxxx'
-         f_flwup = 'xxxxx'
-         f_fsens = 'xxxxx'
-         f_fsens_ai = 'xxxxx'
-         f_fhocn = 'xxxxx'
-         f_fhocn_ai = 'xxxxx'
-         f_fswup = 'xxxxx'
-         f_strintx = 'xxxxx'
-         f_strinty = 'xxxxx'
-         f_strcorx = 'xxxxx'
-         f_strcory = 'xxxxx'
-         f_strtltx = 'xxxxx'
-         f_strtlty = 'xxxxx'
-         f_strairx = 'xxxxx'
-         f_strairy = 'xxxxx'
-         f_strocnx = 'xxxxx'
-         f_strocny = 'xxxxx'
-         f_rain = 'xxxxx'
-         f_snow = 'xxxxx'
-         f_shear = 'xxxxx'
-         f_Tsfc = 'xxxxx'
-         f_uvel = 'xxxxx'
-         f_vvel = 'xxxxx'
-         f_sig1 = 'xxxxx'
-         f_sig2 = 'xxxxx'
-         f_vicen = 'xxxxx'
-         f_vsnon = 'xxxxx'
-         f_fswsfcn = 'xxxxx'
-         f_fswintn = 'xxxxx'
-         f_fswthrun = 'xxxxx'
+      ! Don't turn off CICE duplicates in code.
 
       endif
 
@@ -410,6 +374,7 @@
       call broadcast_scalar (f_frz_onset, master_task)
       call broadcast_scalar (f_aisnap, master_task)
       call broadcast_scalar (f_hisnap, master_task)
+      call broadcast_scalar (f_CMIP, master_task)
       call broadcast_scalar (f_sithick, master_task)
       call broadcast_scalar (f_siage, master_task)
       call broadcast_scalar (f_sisnthick, master_task)
@@ -1791,7 +1756,7 @@
       !---------------------------------------------------------------
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block, &
-      !$OMP k,n,qn,ns,hs,rho_ocn,rho_ice,Tice,Sbr,phi,rhob, &
+      !$OMP k,n,qn,ns,hs,rho_ocn,rho_ice,Tice,Sbr,phi,rhob,dfresh,dfsalt,&
       !$OMP worka,workb,Tinz4d,Sinz4d,Tsnz4d,worka3)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -2373,7 +2338,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = evapi(i,j,iblk)*rhoi
+                 worka(i,j) = evapi(i,j,iblk)/dt
               endif
            enddo
            enddo
@@ -2421,7 +2386,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = evaps(i,j,iblk)*rhos
+                 worka(i,j) = evaps(i,j,iblk)/dt
               endif
            enddo
            enddo
@@ -2433,7 +2398,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*fsnow(i,j,iblk)*rhos
+                 worka(i,j) = aice(i,j,iblk)*fsnow(i,j,iblk)
               endif
            enddo
            enddo
@@ -3005,6 +2970,7 @@
            enddo             ! i
            enddo             ! j
            endif
+
            if (n_aicen(ns) > n2D) then
            do k=1,ncat_hist
            do j = jlo, jhi
@@ -3586,6 +3552,9 @@
 
            do n = 1, num_avail_hist_fields_3Dc
               nn = n2D + n
+
+              if (avail_hist_fields(nn)%vhistfreq == histfreq(ns)) then 
+
               do k = 1, ncat_hist
               do j = jlo, jhi
               do i = ilo, ihi
@@ -3598,7 +3567,6 @@
               enddo             ! i
               enddo             ! j
               enddo             ! k
-              if (avail_hist_fields(nn)%vhistfreq == histfreq(ns)) then 
               if (index(avail_hist_fields(nn)%vname,'siitdthick') /= 0) then
                  if (f_siitdthick(1:1) /= 'x' .and. n_siitdthick(ns)-n2D /= 0) then
                     do k = 1, ncat_hist
@@ -3627,6 +3595,7 @@
                     enddo             ! k
                  endif
               endif
+
               endif
            enddo                ! n
 
